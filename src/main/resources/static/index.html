@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    ```
+    <title>ShiftPlanner</title>
+
+    <link rel="stylesheet" href="style.css">
+    ```
+
+</head>
+
+<body>
+
+<!-- ===================================================== -->
+
+<!-- SIDEBAR -->
+
+<!-- ===================================================== -->
+
+<aside class="sidebar">
+
+    ```
+    <div class="logo-area">
+
+        <div class="logo-icon">
+            📅
+        </div>
+
+        <div>
+            <h2>ShiftPlanner</h2>
+            <p>Workforce Management</p>
+        </div>
+
+    </div>
+
+    <div class="menu-title">
+        MAIN MENU
+    </div>
+
+    <nav>
+
+        <button class="menu-item active"
+                onclick="showSection('dashboard', this)">
+            <span>⌂</span>
+            <label>Dashboard</label>
+        </button>
+
+        <button class="menu-item"
+                onclick="showSection('employees', this)">
+            <span>♙</span>
+            <label>Employees</label>
+        </button>
+
+        <button class="menu-item"
+                onclick="showSection('shifts', this)">
+            <span>◷</span>
+            <label>Shifts</label>
+        </button>
+
+        <button class="menu-item"
+                onclick="showSection('roster', this)">
+            <span>▤</span>
+            <label>Roster</label>
+        </button>
+
+        <button class="menu-item"
+                onclick="showSection('swap', this)">
+            <span>⇄</span>
+            <label>Swap Requests</label>
+        </button>
+
+    </nav>
+
+    <div class="sidebar-footer">
+        <p>ShiftPlanner System</p>
+        <small>Version 1.0</small>
+    </div>
+    ```
+
+</aside>
+
+<!-- ===================================================== -->
+
+<!-- MAIN CONTENT -->
+
+<!-- ===================================================== -->
+
+<div class="main-content">
+
+    ```
+    <!-- TOP HEADER -->
+
+    <header class="topbar">
+
+        <div class="page-heading">
+
+            <h1 id="pageTitle">
+                Dashboard
+            </h1>
+
+            <p id="pageSubtitle">
+                Employee shift roster and swap request management
+            </p>
+
+        </div>
+
+        <div class="profile">
+
+            <div class="profile-avatar">
+                M
+            </div>
+
+            <div class="profile-details">
+                <strong>Manager</strong>
+                <span>Shift Manager</span>
+            </div>
+
+            <button class="logout-btn">
+                Logout
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- PAGE CONTENT -->
+
+    <main class="content">
+
+
+        <!-- ================================================= -->
+        <!-- DASHBOARD -->
+        <!-- ================================================= -->
+
+        <section id="dashboard" class="section">
+
+            <div class="stats-grid">
+
+                <!-- EMPLOYEE COUNT -->
+
+                <div class="stat-card">
+
+                    <div class="stat-icon blue">
+                        ♙
+                    </div>
+
+                    <div>
+                        <span>Employees</span>
+
+                        <h2 id="employeeCount">
+                            0
+                        </h2>
+
+                        <small>
+                            Registered employees
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <!-- SHIFT COUNT -->
+
+                <div class="stat-card">
+
+                    <div class="stat-icon cyan">
+                        ◷
+                    </div>
+
+                    <div>
+                        <span>Shifts</span>
+
+                        <h2 id="shiftCount">
+                            0
+                        </h2>
+
+                        <small>
+                            Available shifts
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <!-- ROSTER COUNT -->
+
+                <div class="stat-card">
+
+                    <div class="stat-icon orange">
+                        ▤
+                    </div>
+
+                    <div>
+                        <span>Roster</span>
+
+                        <h2 id="rosterCount">
+                            0
+                        </h2>
+
+                        <small>
+                            Assigned shifts
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <!-- SWAP COUNT -->
+
+                <div class="stat-card">
+
+                    <div class="stat-icon green">
+                        ⇄
+                    </div>
+
+                    <div>
+                        <span>Swap Requests</span>
+
+                        <h2 id="swapCount">
+                            0
+                        </h2>
+
+                        <small>
+                            Pending requests
+                        </small>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- WELCOME CARD -->
+
+            <div class="welcome-card">
+
+                <div class="welcome-symbol">
+                    📅
+                </div>
+
+                <h2>
+                    Welcome to ShiftPlanner
+                </h2>
+
+                <p>
+                    Manage employees, work shifts, employee
+                    rosters and shift swap requests from one
+                    centralized dashboard.
+                </p>
+
+            </div>
+
+
+            <!-- QUICK ACCESS -->
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Quick Access
+                    </h2>
+
+                    <p>
+                        Select a module to manage your workforce
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="quick-grid">
+
+                <!-- EMPLOYEES -->
+
+                <div class="quick-card"
+                     onclick="showSectionById('employees')">
+
+                    <div class="quick-icon blue">
+                        ♙
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Employees
+                        </h3>
+
+                        <p>
+                            Manage employee information
+                        </p>
+
+                    </div>
+
+                    <span class="arrow">
+                    →
+                </span>
+
+                </div>
+
+
+                <!-- SHIFTS -->
+
+                <div class="quick-card"
+                     onclick="showSectionById('shifts')">
+
+                    <div class="quick-icon cyan">
+                        ◷
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Shifts
+                        </h3>
+
+                        <p>
+                            Manage available work shifts
+                        </p>
+
+                    </div>
+
+                    <span class="arrow">
+                    →
+                </span>
+
+                </div>
+
+
+                <!-- ROSTER -->
+
+                <div class="quick-card"
+                     onclick="showSectionById('roster')">
+
+                    <div class="quick-icon orange">
+                        ▤
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Employee Roster
+                        </h3>
+
+                        <p>
+                            View employee shift assignments
+                        </p>
+
+                    </div>
+
+                    <span class="arrow">
+                    →
+                </span>
+
+                </div>
+
+
+                <!-- SWAP -->
+
+                <div class="quick-card"
+                     onclick="showSectionById('swap')">
+
+                    <div class="quick-icon green">
+                        ⇄
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Swap Requests
+                        </h3>
+
+                        <p>
+                            Review and approve shift swaps
+                        </p>
+
+                    </div>
+
+                    <span class="arrow">
+                    →
+                </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- EMPLOYEES -->
+        <!-- ================================================= -->
+
+        <section id="employees" class="section hidden">
+
+            <div class="module-header">
+
+                <div>
+
+                    <h2>
+                        Employees
+                    </h2>
+
+                    <p>
+                        Manage employee information
+                    </p>
+
+                </div>
+
+                <button class="primary-btn"
+                        onclick="openEmployeeForm()">
+
+                    + Add Employee
+
+                </button>
+
+            </div>
+
+
+            <!-- EMPLOYEE FORM -->
+
+            <div id="employeeFormCard"
+                 class="form-card hidden">
+
+                <div class="form-header">
+
+                    <div>
+
+                        <h3 id="employeeFormTitle">
+                            Add Employee
+                        </h3>
+
+                        <p>
+                            Enter employee details below
+                        </p>
+
+                    </div>
+
+                    <button class="close-btn"
+                            onclick="closeEmployeeForm()">
+
+                        ✕
+
+                    </button>
+
+                </div>
+
+
+                <form id="employeeForm"
+                      onsubmit="saveEmployee(event)">
+
+                    <input type="hidden"
+                           id="employeeId">
+
+                    <div class="form-grid">
+
+                        <!-- NAME -->
+
+                        <div class="form-group">
+
+                            <label for="employeeName">
+                                Employee Name
+                            </label>
+
+                            <input
+                                    type="text"
+                                    id="employeeName"
+                                    placeholder="Enter employee name"
+                                    required>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="form-group">
+
+                            <label for="employeeEmail">
+                                Email
+                            </label>
+
+                            <input
+                                    type="email"
+                                    id="employeeEmail"
+                                    placeholder="Enter email address"
+                                    required>
+
+                        </div>
+
+
+                        <!-- ROLE -->
+
+                        <div class="form-group">
+
+                            <label for="employeeRole">
+                                Role
+                            </label>
+
+                            <select id="employeeRole"
+                                    required>
+
+                                <option value="">
+                                    Select role
+                                </option>
+
+                                <option value="EMPLOYEE">
+                                    Employee
+                                </option>
+
+                                <option value="MANAGER">
+                                    Manager
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <button type="button"
+                                class="cancel-btn"
+                                onclick="closeEmployeeForm()">
+
+                            Cancel
+
+                        </button>
+
+                        <button type="submit"
+                                class="primary-btn">
+
+                            Save Employee
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- EMPLOYEE TABLE -->
+
+            <div class="table-card">
+
+                <div class="table-header">
+
+                    <div>
+
+                        <h3>
+                            Employee List
+                        </h3>
+
+                        <p>
+                            All registered employees
+                        </p>
+
+                        <!-- EMPLOYEE SEARCH -->
+
+                        <input
+                                type="text"
+                                id="employeeSearch"
+                                placeholder="Search employee..."
+                                onkeyup="filterEmployees()">
+
+                    </div>
+
+                    <button class="refresh-btn"
+                            onclick="loadEmployees()">
+
+                        ↻ Refresh
+
+                    </button>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+                            <th>Employee Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+
+                        </tr>
+
+                        </thead>
+
+                        <tbody id="employeeTableBody">
+
+                        <tr>
+
+                            <td colspan="5"
+                                class="empty-table">
+
+                                Loading employees...
+
+                            </td>
+
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- SHIFTS -->
+        <!-- ================================================= -->
+
+        <section id="shifts" class="section hidden">
+
+            <div class="module-header">
+
+                <div>
+
+                    <h2>
+                        Shifts
+                    </h2>
+
+                    <p>
+                        Manage available work shifts
+                    </p>
+
+                </div>
+
+                <button class="primary-btn"
+                        onclick="openShiftForm()">
+
+                    + Add Shift
+
+                </button>
+
+            </div>
+
+
+            <!-- SHIFT FORM -->
+
+            <div id="shiftFormCard"
+                 class="form-card hidden">
+
+                <div class="form-header">
+
+                    <div>
+
+                        <h3 id="shiftFormTitle">
+                            Add Shift
+                        </h3>
+
+                        <p>
+                            Enter shift details below
+                        </p>
+
+                    </div>
+
+                    <button class="close-btn"
+                            onclick="closeShiftForm()">
+
+                        ✕
+
+                    </button>
+
+                </div>
+
+
+                <form id="shiftForm"
+                      onsubmit="saveShift(event)">
+
+                    <input type="hidden"
+                           id="shiftId">
+
+                    <div class="form-grid">
+
+                        <!-- SHIFT NAME -->
+
+                        <div class="form-group">
+
+                            <label for="shiftName">
+                                Shift Name
+                            </label>
+
+                            <input
+                                    type="text"
+                                    id="shiftName"
+                                    placeholder="Example: Morning Shift"
+                                    required>
+
+                        </div>
+
+
+                        <!-- DATE -->
+
+                        <div class="form-group">
+
+                            <label for="shiftDate">
+                                Date
+                            </label>
+
+                            <input
+                                    type="date"
+                                    id="shiftDate"
+                                    required>
+
+                        </div>
+
+
+                        <!-- START -->
+
+                        <div class="form-group">
+
+                            <label for="startTime">
+                                Start Time
+                            </label>
+
+                            <input
+                                    type="time"
+                                    id="startTime"
+                                    required>
+
+                        </div>
+
+
+                        <!-- END -->
+
+                        <div class="form-group">
+
+                            <label for="endTime">
+                                End Time
+                            </label>
+
+                            <input
+                                    type="time"
+                                    id="endTime"
+                                    required>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <button type="button"
+                                class="cancel-btn"
+                                onclick="closeShiftForm()">
+
+                            Cancel
+
+                        </button>
+
+                        <button type="submit"
+                                class="primary-btn">
+
+                            Save Shift
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- SHIFT TABLE -->
+
+            <div class="table-card">
+
+                <div class="table-header">
+
+                    <div>
+
+                        <h3>
+                            Shift List
+                        </h3>
+
+                        <p>
+                            All available work shifts
+                        </p>
+
+                        <!-- SHIFT SEARCH -->
+
+                        <input
+                                type="text"
+                                id="shiftSearch"
+                                placeholder="Search shift..."
+                                onkeyup="filterShifts()">
+
+                    </div>
+
+                    <button class="refresh-btn"
+                            onclick="loadShifts()">
+
+                        ↻ Refresh
+
+                    </button>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+                            <th>Shift Name</th>
+                            <th>Date</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Actions</th>
+
+                        </tr>
+
+                        </thead>
+
+                        <tbody id="shiftTableBody">
+
+                        <tr>
+
+                            <td colspan="6"
+                                class="empty-table">
+
+                                Loading shifts...
+
+                            </td>
+
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- ROSTER -->
+        <!-- ================================================= -->
+
+        <section id="roster" class="section hidden">
+
+            <div class="module-header">
+
+                <div>
+
+                    <h2>
+                        Roster
+                    </h2>
+
+                    <p>
+                        Assign employees to work shifts
+                    </p>
+
+                </div>
+
+                <button class="primary-btn"
+                        onclick="openRosterForm()">
+
+                    + Assign Shift
+
+                </button>
+
+            </div>
+
+
+            <!-- ROSTER FORM -->
+
+            <div id="rosterFormCard"
+                 class="form-card hidden">
+
+                <div class="form-header">
+
+                    <div>
+
+                        <h3>
+                            Assign Shift
+                        </h3>
+
+                        <p>
+                            Assign an employee to a shift
+                        </p>
+
+                    </div>
+
+                    <button class="close-btn"
+                            onclick="closeRosterForm()">
+
+                        ✕
+
+                    </button>
+
+                </div>
+
+
+                <form id="rosterForm"
+                      onsubmit="saveRoster(event)">
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label for="rosterEmployee">
+                                Employee
+                            </label>
+
+                            <select id="rosterEmployee"
+                                    required>
+
+                                <option value="">
+                                    Select Employee
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="rosterShift">
+                                Shift
+                            </label>
+
+                            <select id="rosterShift"
+                                    required>
+
+                                <option value="">
+                                    Select Shift
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <button type="button"
+                                class="cancel-btn"
+                                onclick="closeRosterForm()">
+
+                            Cancel
+
+                        </button>
+
+                        <button type="submit"
+                                class="primary-btn">
+
+                            Assign Shift
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- ROSTER TABLE -->
+
+            <div class="table-card">
+
+                <div class="table-header">
+
+                    <div>
+
+                        <h3>
+                            Employee Roster
+                        </h3>
+
+                        <p>
+                            Current employee shift assignments
+                        </p>
+
+                        <!-- ROSTER SEARCH -->
+
+                        <input
+                                type="text"
+                                id="rosterSearch"
+                                placeholder="Search employee or shift..."
+                                onkeyup="filterRoster()">
+
+                    </div>
+
+                    <button class="refresh-btn"
+                            onclick="loadRoster()">
+
+                        ↻ Refresh
+
+                    </button>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+                            <th>Employee</th>
+                            <th>Shift</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Actions</th>
+
+                        </tr>
+
+                        </thead>
+
+                        <tbody id="rosterTableBody">
+
+                        <tr>
+
+                            <td colspan="6"
+                                class="empty-table">
+
+                                Loading roster...
+
+                            </td>
+
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- SWAP REQUESTS -->
+        <!-- ================================================= -->
+
+        <section id="swap" class="section hidden">
+
+            <!-- HEADER -->
+
+            <div class="module-header">
+
+                <div>
+
+                    <h2>
+                        Swap Requests
+                    </h2>
+
+                    <p>
+                        Create and manage employee shift swap requests
+                    </p>
+
+                </div>
+
+                <button class="primary-btn"
+                        onclick="openSwapForm()">
+
+                    + Create Swap Request
+
+                </button>
+
+            </div>
+
+
+            <!-- SWAP REQUEST FORM -->
+
+            <div id="swapFormCard"
+                 class="form-card hidden">
+
+                <div class="form-header">
+
+                    <div>
+
+                        <h3>
+                            Create Swap Request
+                        </h3>
+
+                        <p>
+                            Select employees and their shifts
+                        </p>
+
+                    </div>
+
+                    <button type="button"
+                            class="close-btn"
+                            onclick="closeSwapForm()">
+
+                        ✕
+
+                    </button>
+
+                </div>
+
+
+                <form id="swapForm"
+                      onsubmit="saveSwapRequest(event)">
+
+                    <div class="form-grid">
+
+                        <!-- REQUESTER -->
+
+                        <div class="form-group">
+
+                            <label for="swapRequester">
+                                Requester
+                            </label>
+
+                            <select id="swapRequester"
+                                    required>
+
+                                <option value="">
+                                    Select Requester
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- REQUESTER SHIFT -->
+
+                        <div class="form-group">
+
+                            <label for="swapRequesterShift">
+                                Requester Shift
+                            </label>
+
+                            <select id="swapRequesterShift"
+                                    required>
+
+                                <option value="">
+                                    Select Requester Shift
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- COLLEAGUE -->
+
+                        <div class="form-group">
+
+                            <label for="swapColleague">
+                                Colleague
+                            </label>
+
+                            <select id="swapColleague"
+                                    required>
+
+                                <option value="">
+                                    Select Colleague
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- COLLEAGUE SHIFT -->
+
+                        <div class="form-group">
+
+                            <label for="swapColleagueShift">
+                                Colleague Shift
+                            </label>
+
+                            <select id="swapColleagueShift"
+                                    required>
+
+                                <option value="">
+                                    Select Colleague Shift
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FORM BUTTONS -->
+
+                    <div class="form-actions">
+
+                        <button type="button"
+                                class="cancel-btn"
+                                onclick="closeSwapForm()">
+
+                            Cancel
+
+                        </button>
+
+                        <button type="submit"
+                                class="primary-btn">
+
+                            Send Swap Request
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- FILTER -->
+
+            <div class="filter-section">
+
+                <label for="swapSearch">
+                    Search:
+                </label>
+
+                <input
+                        type="text"
+                        id="swapSearch"
+                        placeholder="Search employee, shift, date..."
+                        onkeyup="filterSwapRequests()">
+
+
+                <label for="swapStatusFilter">
+                    Filter by Status:
+                </label>
+
+                <select id="swapStatusFilter"
+                        onchange="filterSwapRequests()">
+
+                    <option value="ALL">
+                        All Requests
+                    </option>
+
+                    <option value="PENDING_MANAGER">
+                        Pending Manager
+                    </option>
+
+                    <option value="MANAGER_APPROVED">
+                        Manager Approved
+                    </option>
+
+                    <option value="MANAGER_REJECTED">
+                        Manager Rejected
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- SWAP REQUEST LIST -->
+
+            <div id="swapList"
+                 class="data-grid">
+
+            </div>
+
+        </section>
+
+    </main>
+    ```
+
+</div>
+
+<!-- ===================================================== -->
+
+<!-- JAVASCRIPT -->
+
+<!-- ===================================================== -->
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
