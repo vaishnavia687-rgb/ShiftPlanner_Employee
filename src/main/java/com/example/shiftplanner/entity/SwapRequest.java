@@ -38,7 +38,7 @@ public class SwapRequest {
         this.colleague = colleague;
         this.requesterShift = requesterShift;
         this.colleagueShift = colleagueShift;
-        this.status = SwapStatus.PENDING_MANAGER;
+        this.status = SwapStatus.PENDING_MANAGER;// important waiting for request
     }
 
     public Long getId() {

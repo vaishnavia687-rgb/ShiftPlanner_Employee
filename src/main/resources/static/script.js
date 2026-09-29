@@ -1,420 +1,511 @@
-const API_URL = "http://localhost:8080/api";
 
-/* =========================================================
-   GLOBAL DATA
-========================================================= */
+const API_URL = "http://localhost:8080/api";
 
 let allSwapRequests = [];
 
 
 /* =========================================================
-   PAGE NAVIGATION
+   NAVIGATION
 ========================================================= */
 
-function showSection(sectionId, clickedButton) {
+function showSection(sectionId) {
 
     document.querySelectorAll(".section").forEach(section => {
         section.classList.add("hidden");
     });
 
-    const selectedSection = document.getElementById(sectionId);
+    const section = document.getElementById(sectionId);
 
-    if (selectedSection) {
-        selectedSection.classList.remove("hidden");
+    if (section) {
+        section.classList.remove("hidden");
     }
 
-    document.querySelectorAll(".menu-item").forEach(item => {
-        item.classList.remove("active");
-    });
-
-    if (clickedButton) {
-        clickedButton.classList.add("active");
-    }
-
-    const pageInformation = {
-
-        dashboard: {
-            title: "Dashboard",
-            subtitle:
-                "Employee shift roster and swap request management"
-        },
-
-        employees: {
-            title: "Employees",
-            subtitle:
-                "Manage registered employees"
-        },
-
-        shifts: {
-            title: "Shifts",
-            subtitle:
-                "Manage available work shifts"
-        },
-
-        roster: {
-            title: "Employee Roster",
-            subtitle:
-                "View employee shift assignments"
-        },
-
-        swap: {
-            title: "Swap Requests",
-            subtitle:
-                "Manage employee shift swap requests"
-        }
-
-    };
-
-    if (pageInformation[sectionId]) {
-
-        document.getElementById("pageTitle").textContent =
-            pageInformation[sectionId].title;
-
-        document.getElementById("pageSubtitle").textContent =
-            pageInformation[sectionId].subtitle;
+    if (sectionId === "dashboard") {
+        loadDashboardCounts();
     }
 
     if (sectionId === "employees") {
         loadEmployees();
     }
-    function filterEmployees() {
-        const searchValue = document
-            .getElementById("employeeSearch")
-            .value
-            .toLowerCase();
-
-        const rows = document.querySelectorAll(
-            "#employeeTableBody tr"
-        );
-
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-
-            if (text.includes(searchValue)) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-            }
-        });
-    }
 
     if (sectionId === "shifts") {
         loadShifts();
-    }
-    function filterShifts() {
-        const searchValue = document
-            .getElementById("shiftSearch")
-            .value
-            .toLowerCase();
-
-        const rows = document.querySelectorAll(
-            "#shiftTableBody tr"
-        );
-
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-
-            if (text.includes(searchValue)) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-            }
-        });
     }
 
     if (sectionId === "roster") {
         loadRoster();
     }
 
-    if (sectionId === "swap") {
+    if (sectionId === "swapRequests") {
         loadSwapRequests();
     }
-    function filterSwapRequests() {
-        const searchValue = document
-            .getElementById("swapSearch")
-            .value
-            .toLowerCase();
-
-        const cards = document.querySelectorAll("#swapList > *");
-
-        cards.forEach(card => {
-            const text = card.textContent.toLowerCase();
-
-            if (text.includes(searchValue)) {
-                card.style.display = "";
-            } else {
-                card.style.display = "none";
-            }
-        });
-    }
 }
 
 
 /* =========================================================
-   QUICK ACCESS
+   DASHBOARD
 ========================================================= */
 
-function showSectionById(sectionId) {
+async function loadDashboardCounts() {
 
-    const menuItems =
-        document.querySelectorAll(".menu-item");
+    try {
 
-    let selectedButton = null;
+        const [
+            employeeResponse,
+            shiftResponse,
+            rosterResponse,
+            swapResponse
+        ] = await Promise.all([
 
-    menuItems.forEach(button => {
+            fetch(`${API_URL}/employees`),
+fetch(`${API_URL}/shifts`),
+    fetch(`${API_URL}/rosters`),
+    fetch(`${API_URL}/swap-requests`)
+]);
 
-        const onclickValue =
-            button.getAttribute("onclick");
 
-        if (
-            onclickValue &&
-            onclickValue.includes("'" + sectionId + "'")
-        ) {
-            selectedButton = button;
-        }
+if (!employeeResponse.ok ||
+    !shiftResponse.ok ||
+    !rosterResponse.ok ||
+    !swapResponse.ok) {
 
-    });
+    throw new Error("Failed to load dashboard data");
+}
 
-    showSection(sectionId, selectedButton);
+
+const employees = await employeeResponse.json();
+const shifts = await shiftResponse.json();
+const rosters = await rosterResponse.json();
+const swaps = await swapResponse.json();
+
+
+const employeeCount =
+    document.getElementById("employeeCount");
+
+const shiftCount =
+    document.getElementById("shiftCount");
+
+const rosterCount =
+    document.getElementById("rosterCount");
+
+const swapCount =
+    document.getElementById("swapCount");
+
+
+if (employeeCount) {
+    employeeCount.textContent = employees.length;
+}
+
+if (shiftCount) {
+    shiftCount.textContent = shifts.length;
+}
+
+if (rosterCount) {
+    rosterCount.textContent = rosters.length;
+}
+
+if (swapCount) {
+
+    swapCount.textContent =
+        swaps.filter(request =>
+            request.status === "PENDING_MANAGER"
+        ).length;
+}
+
+
+/* Swap dashboard */
+
+const totalSwapRequests =
+    document.getElementById("totalSwapRequests");
+
+const pendingSwapRequests =
+    document.getElementById("pendingSwapRequests");
+
+const approvedSwapRequests =
+    document.getElementById("approvedSwapRequests");
+
+const rejectedSwapRequests =
+    document.getElementById("rejectedSwapRequests");
+
+
+if (totalSwapRequests) {
+    totalSwapRequests.textContent =
+        swaps.length;
+}
+
+if (pendingSwapRequests) {
+
+    pendingSwapRequests.textContent =
+        swaps.filter(request =>
+            request.status === "PENDING_MANAGER"
+        ).length;
+}
+
+if (approvedSwapRequests) {
+
+    approvedSwapRequests.textContent =
+        swaps.filter(request =>
+            request.status === "MANAGER_APPROVED"
+        ).length;
+}
+
+if (rejectedSwapRequests) {
+
+    rejectedSwapRequests.textContent =
+        swaps.filter(request =>
+            request.status === "MANAGER_REJECTED"
+        ).length;
+}
+
+} catch (error) {
+
+    console.error(
+        "Dashboard count error:",
+        error
+    );
+}
 }
 
 
 /* =========================================================
-   EMPLOYEE CRUD
+   EMPLOYEES
 ========================================================= */
-
-
-/* OPEN ADD EMPLOYEE FORM */
-
-function openEmployeeForm() {
-
-    document
-        .getElementById("employeeFormCard")
-        .classList.remove("hidden");
-
-    document
-        .getElementById("employeeFormTitle")
-        .textContent = "Add Employee";
-
-    document
-        .getElementById("employeeForm")
-        .reset();
-
-    document
-        .getElementById("employeeId")
-        .value = "";
-}
-
-
-/* CLOSE EMPLOYEE FORM */
-
-function closeEmployeeForm() {
-
-    document
-        .getElementById("employeeFormCard")
-        .classList.add("hidden");
-
-    document
-        .getElementById("employeeForm")
-        .reset();
-
-    document
-        .getElementById("employeeId")
-        .value = "";
-}
-
-
-/* LOAD EMPLOYEES */
 
 async function loadEmployees() {
-
-    const tableBody =
-        document.getElementById("employeeTableBody");
-
-    if (!tableBody) return;
-
-    tableBody.innerHTML = `
-        <tr>
-            <td colspan="5" class="empty-table">
-                Loading employees...
-            </td>
-        </tr>
-    `;
 
     try {
 
         const response =
             await fetch(`${API_URL}/employees`);
 
+
         if (!response.ok) {
-            throw new Error("Failed to load employees");
+
+            throw new Error(
+                "Unable to load employees"
+            );
         }
+
 
         const employees =
             await response.json();
 
-        const employeeCount =
-            document.getElementById("employeeCount");
 
-        if (employeeCount) {
-            employeeCount.textContent =
-                employees.length;
-        }
+        const tableBody =
+            document.getElementById(
+                "employeeTableBody"
+            );
 
-        if (employees.length === 0) {
 
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="5"
-                        class="empty-table">
-
-                        No employees found.
-
-                        <br><br>
-
-                        Click
-                        <strong>+ Add Employee</strong>
-                        to create one.
-
-                    </td>
-                </tr>
-            `;
-
+        if (!tableBody) {
             return;
         }
 
-        tableBody.innerHTML =
-            employees.map(employee => {
 
-                const firstLetter =
-                    employee.name
-                        ? employee.name
-                            .charAt(0)
-                            .toUpperCase()
-                        : "?";
+        tableBody.innerHTML = "";
 
-                return `
-                    <tr>
 
-                        <td>
-                            ${employee.id}
-                        </td>
+        employees.forEach(employee => {
 
-                        <td>
+            const row =
+                document.createElement("tr");
 
-                            <div class="employee-name">
 
-                                <div class="employee-avatar">
-                                    ${firstLetter}
-                                </div>
+            row.innerHTML = `
+                <td>${employee.id}</td>
 
-                                ${employee.name}
+                <td>${employee.name || ""}</td>
 
-                            </div>
+                <td>${employee.email || ""}</td>
 
-                        </td>
+                <td>${employee.role || ""}</td>
 
-                        <td>
-                            ${employee.email}
-                        </td>
+                <td>
 
-                        <td>
+                    <button
+                        type="button"
+                        onclick="editEmployee(${employee.id})">
+                        Edit
+                    </button>
 
-                            <span class="role-badge">
-                                ${employee.role}
-                            </span>
+                    <button
+                        type="button"
+                        onclick="deleteEmployee(${employee.id})">
+                        Delete
+                    </button>
 
-                        </td>
+                </td>
+            `;
 
-                        <td>
 
-                            <div class="action-buttons">
+            tableBody.appendChild(row);
+        });
 
-                                <button
-                                    class="edit-btn"
-                                    onclick="editEmployee(${employee.id})"
-                                    title="Edit Employee">
-
-                                    ✏
-
-                                </button>
-
-                                <button
-                                    class="delete-btn"
-                                    onclick="deleteEmployee(${employee.id})"
-                                    title="Delete Employee">
-
-                                    🗑
-
-                                </button>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-                `;
-
-            }).join("");
 
     } catch (error) {
 
-        console.error(error);
-
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="5"
-                    class="empty-table">
-
-                    ⚠ Unable to connect to
-                    Spring Boot backend.
-
-                </td>
-            </tr>
-        `;
+        console.error(
+            "Employee loading error:",
+            error
+        );
     }
 }
 
 
-/* CREATE / UPDATE EMPLOYEE */
+/* ---------------------------------------------------------
+   OPEN EMPLOYEE FORM
+--------------------------------------------------------- */
+
+function openEmployeeForm() {
+
+    const card =
+        document.getElementById(
+            "employeeFormCard"
+        );
+
+
+    if (card) {
+        card.classList.remove("hidden");
+    }
+
+
+    const title =
+        document.getElementById(
+            "employeeFormTitle"
+        );
+
+
+    if (title) {
+        title.textContent = "Add Employee";
+    }
+
+
+    const form =
+        document.getElementById(
+            "employeeForm"
+        );
+
+
+    if (form) {
+        form.reset();
+    }
+
+
+    const id =
+        document.getElementById(
+            "employeeId"
+        );
+
+
+    if (id) {
+        id.value = "";
+    }
+}
+
+
+/* ---------------------------------------------------------
+   CLOSE EMPLOYEE FORM
+--------------------------------------------------------- */
+
+function closeEmployeeForm() {
+
+    const card =
+        document.getElementById(
+            "employeeFormCard"
+        );
+
+
+    if (card) {
+        card.classList.add("hidden");
+    }
+
+
+    const form =
+        document.getElementById(
+            "employeeForm"
+        );
+
+
+    if (form) {
+        form.reset();
+    }
+
+
+    const id =
+        document.getElementById(
+            "employeeId"
+        );
+
+
+    if (id) {
+        id.value = "";
+    }
+}
+
+
+/* ---------------------------------------------------------
+   EDIT EMPLOYEE
+--------------------------------------------------------- */
+
+async function editEmployee(id) {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/employees/${id}`
+            );
+
+
+        /*
+           If GET /employees/{id} is not available
+           in backend, get all employees instead.
+        */
+
+        let employee;
+
+
+        if (response.ok) {
+
+            employee =
+                await response.json();
+
+        } else {
+
+            const allResponse =
+                await fetch(
+                    `${API_URL}/employees`
+                );
+
+
+            if (!allResponse.ok) {
+
+                throw new Error(
+                    "Unable to load employee"
+                );
+            }
+
+
+            const employees =
+                await allResponse.json();
+
+
+            employee =
+                employees.find(
+                    item => Number(item.id) === Number(id)
+                );
+        }
+
+
+        if (!employee) {
+
+            alert("Employee not found.");
+
+            return;
+        }
+
+
+        document.getElementById(
+            "employeeId"
+        ).value = employee.id;
+
+
+        document.getElementById(
+            "employeeName"
+        ).value = employee.name || "";
+
+
+        document.getElementById(
+            "employeeEmail"
+        ).value = employee.email || "";
+
+
+        document.getElementById(
+            "employeeRole"
+        ).value = employee.role || "";
+
+
+        document.getElementById(
+            "employeeFormTitle"
+        ).textContent = "Edit Employee";
+
+
+        document.getElementById(
+            "employeeFormCard"
+        ).classList.remove("hidden");
+
+
+    } catch (error) {
+
+        console.error(
+            "Edit employee error:",
+            error
+        );
+
+
+        alert(
+            "Unable to load employee.\n\n" +
+            error.message
+        );
+    }
+}
+
+
+/* ---------------------------------------------------------
+   SAVE EMPLOYEE
+--------------------------------------------------------- */
 
 async function saveEmployee(event) {
 
     event.preventDefault();
 
+
     const id =
-        document.getElementById("employeeId").value;
+        document.getElementById(
+            "employeeId"
+        ).value;
+
 
     const name =
-        document
-            .getElementById("employeeName")
-            .value
-            .trim();
+        document.getElementById(
+            "employeeName"
+        ).value.trim();
+
 
     const email =
-        document
-            .getElementById("employeeEmail")
-            .value
-            .trim();
+        document.getElementById(
+            "employeeEmail"
+        ).value.trim();
+
 
     const role =
-        document
-            .getElementById("employeeRole")
-            .value;
+        document.getElementById(
+            "employeeRole"
+        ).value.trim();
+
+
+    if (!name || !email || !role) {
+
+        alert(
+            "Please fill all employee details."
+        );
+
+        return;
+    }
+
 
     const employee = {
 
         name: name,
-
         email: email,
-
         role: role
-
     };
+
 
     try {
 
         let response;
+
 
         if (id) {
 
@@ -453,23 +544,26 @@ async function saveEmployee(event) {
                 );
         }
 
+
         if (!response.ok) {
+
+            const message =
+                await response.text();
+
             throw new Error(
-                "Unable to save employee"
+                message ||
+                `Request failed with status ${response.status}`
             );
         }
 
-        const savedEmployee =
-            await response.json();
-
-        console.log(
-            "Saved employee:",
-            savedEmployee
-        );
 
         closeEmployeeForm();
 
+
         await loadEmployees();
+
+        await loadDashboardCounts();
+
 
         alert(
             id
@@ -477,104 +571,37 @@ async function saveEmployee(event) {
                 : "Employee added successfully!"
         );
 
+
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Save employee error:",
+            error
+        );
+
 
         alert(
             "Unable to save employee.\n\n" +
-            "Please check the Spring Boot server."
+            error.message
         );
     }
 }
 
 
-/* EDIT EMPLOYEE */
-
-async function editEmployee(id) {
-
-    try {
-
-        const response =
-            await fetch(`${API_URL}/employees`);
-
-        if (!response.ok) {
-            throw new Error(
-                "Unable to load employees"
-            );
-        }
-
-        const employees =
-            await response.json();
-
-        const employee =
-            employees.find(
-                item => item.id == id
-            );
-
-        if (!employee) {
-
-            alert("Employee not found.");
-
-            return;
-        }
-
-        document
-            .getElementById("employeeId")
-            .value = employee.id;
-
-        document
-            .getElementById("employeeName")
-            .value = employee.name;
-
-        document
-            .getElementById("employeeEmail")
-            .value = employee.email;
-
-        document
-            .getElementById("employeeRole")
-            .value = employee.role;
-
-        document
-            .getElementById("employeeFormTitle")
-            .textContent = "Edit Employee";
-
-        document
-            .getElementById("employeeFormCard")
-            .classList.remove("hidden");
-
-        document
-            .getElementById("employeeFormCard")
-            .scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Unable to load employee details."
-        );
-    }
-}
-
-
-/* DELETE EMPLOYEE */
+/* ---------------------------------------------------------
+   DELETE EMPLOYEE
+--------------------------------------------------------- */
 
 async function deleteEmployee(id) {
 
-    const confirmed =
-        confirm(
-            "Are you sure you want to delete Employee ID "
-            + id
-            + "?"
-        );
-
-    if (!confirmed) {
+    if (
+        !confirm(
+            "Are you sure you want to delete this employee?"
+        )
+    ) {
         return;
     }
+
 
     try {
 
@@ -586,259 +613,347 @@ async function deleteEmployee(id) {
                 }
             );
 
+
+        const message =
+            await response.text();
+
+
+        console.log(
+            "Delete employee:",
+            response.status,
+            message
+        );
+
+
         if (!response.ok) {
 
-            const message =
-                await response.text();
-
-            throw new Error(message);
+            throw new Error(
+                message ||
+                `Delete failed with status ${response.status}`
+            );
         }
+
+
+        await loadEmployees();
+
+        await loadRoster();
+
+        await loadSwapRequests();
+
+        await loadDashboardCounts();
+
 
         alert(
             "Employee deleted successfully!"
         );
 
-        await loadEmployees();
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Delete employee error:",
+            error
+        );
+
 
         alert(
             "Unable to delete employee.\n\n" +
-            "If this employee is already assigned " +
-            "to a roster or swap request, " +
-            "the database may prevent deletion."
+            error.message
         );
     }
 }
 
 
+/* ---------------------------------------------------------
+   FILTER EMPLOYEES
+--------------------------------------------------------- */
+
+function filterEmployees() {
+
+    const searchInput =
+        document.getElementById(
+            "employeeSearch"
+        );
+
+
+    if (!searchInput) {
+        return;
+    }
+
+
+    const search =
+        searchInput.value.toLowerCase();
+
+
+    const rows =
+        document.querySelectorAll(
+            "#employeeTableBody tr"
+        );
+
+
+    rows.forEach(row => {
+
+        const text =
+            row.textContent.toLowerCase();
+
+
+        row.style.display =
+            text.includes(search)
+                ? ""
+                : "none";
+    });
+}
+
+
 /* =========================================================
-   SHIFT CRUD
+   SHIFTS
 ========================================================= */
 
 
-/* OPEN ADD SHIFT FORM */
+/* ---------------------------------------------------------
+   OPEN SHIFT FORM
+--------------------------------------------------------- */
 
 function openShiftForm() {
 
-    document
-        .getElementById("shiftFormCard")
-        .classList.remove("hidden");
-
-    document
-        .getElementById("shiftFormTitle")
-        .textContent = "Add Shift";
-
-    document
-        .getElementById("shiftForm")
-        .reset();
-
-    document
-        .getElementById("shiftId")
-        .value = "";
-}
+    const card =
+        document.getElementById(
+            "shiftFormCard"
+        );
 
 
-/* CLOSE SHIFT FORM */
-
-function closeShiftForm() {
-
-    document
-        .getElementById("shiftFormCard")
-        .classList.add("hidden");
-
-    document
-        .getElementById("shiftForm")
-        .reset();
-
-    document
-        .getElementById("shiftId")
-        .value = "";
-}
+    if (card) {
+        card.classList.remove("hidden");
+    }
 
 
-/* LOAD SHIFTS */
+    const title =
+        document.getElementById(
+            "shiftFormTitle"
+        );
 
-async function loadShifts() {
 
-    const tableBody =
-        document.getElementById("shiftTableBody");
+    if (title) {
+        title.textContent = "Add Shift";
+    }
 
-    if (!tableBody) return;
 
-    tableBody.innerHTML = `
-        <tr>
-            <td colspan="6"
-                class="empty-table">
+    const form =
+        document.getElementById(
+            "shiftForm"
+        );
 
-                Loading shifts...
 
-            </td>
-        </tr>
-    `;
+    if (form) {
+        form.reset();
+    }
 
-    try {
 
-        const response =
-            await fetch(`${API_URL}/shifts`);
+    const id =
+        document.getElementById(
+            "shiftId"
+        );
 
-        if (!response.ok) {
 
-            throw new Error(
-                "Failed to load shifts"
-            );
-        }
-
-        const shifts =
-            await response.json();
-
-        const shiftCount =
-            document.getElementById("shiftCount");
-
-        if (shiftCount) {
-            shiftCount.textContent =
-                shifts.length;
-        }
-
-        if (shifts.length === 0) {
-
-            tableBody.innerHTML = `
-                <tr>
-
-                    <td colspan="6"
-                        class="empty-table">
-
-                        No shifts found.
-
-                        <br><br>
-
-                        Click
-                        <strong>+ Add Shift</strong>
-                        to create one.
-
-                    </td>
-
-                </tr>
-            `;
-
-            return;
-        }
-
-        tableBody.innerHTML =
-            shifts.map(shift => {
-
-                return `
-                    <tr>
-
-                        <td>
-                            ${shift.id}
-                        </td>
-
-                        <td>
-                            <strong>
-                                ${shift.shiftName}
-                            </strong>
-                        </td>
-
-                        <td>
-                            ${shift.date}
-                        </td>
-
-                        <td>
-                            ${shift.startTime}
-                        </td>
-
-                        <td>
-                            ${shift.endTime}
-                        </td>
-
-                        <td>
-
-                            <div class="action-buttons">
-
-                                <button
-                                    class="edit-btn"
-                                    onclick="editShift(${shift.id})"
-                                    title="Edit Shift">
-
-                                    ✏
-
-                                </button>
-
-                                <button
-                                    class="delete-btn"
-                                    onclick="deleteShift(${shift.id})"
-                                    title="Delete Shift">
-
-                                    🗑
-
-                                </button>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-                `;
-
-            }).join("");
-
-    } catch (error) {
-
-        console.error(error);
-
-        tableBody.innerHTML = `
-            <tr>
-
-                <td colspan="6"
-                    class="empty-table">
-
-                    ⚠ Unable to connect to
-                    Spring Boot backend.
-
-                </td>
-
-            </tr>
-        `;
+    if (id) {
+        id.value = "";
     }
 }
 
 
-/* CREATE / UPDATE SHIFT */
+/* ---------------------------------------------------------
+   CLOSE SHIFT FORM
+--------------------------------------------------------- */
+
+function closeShiftForm() {
+
+    const card =
+        document.getElementById(
+            "shiftFormCard"
+        );
+
+
+    if (card) {
+        card.classList.add("hidden");
+    }
+
+
+    const form =
+        document.getElementById(
+            "shiftForm"
+        );
+
+
+    if (form) {
+        form.reset();
+    }
+
+
+    const id =
+        document.getElementById(
+            "shiftId"
+        );
+
+
+    if (id) {
+        id.value = "";
+    }
+}
+
+
+/* ---------------------------------------------------------
+   LOAD SHIFTS
+--------------------------------------------------------- */
+
+async function loadShifts() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/shifts`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load shifts"
+            );
+        }
+
+
+        const shifts =
+            await response.json();
+
+
+        const tableBody =
+            document.getElementById(
+                "shiftTableBody"
+            );
+
+
+        if (!tableBody) {
+            return;
+        }
+
+
+        tableBody.innerHTML = "";
+
+
+        shifts.forEach(shift => {
+
+            const row =
+                document.createElement("tr");
+
+
+            row.innerHTML = `
+                <td>${shift.id}</td>
+
+                <td>${shift.shiftName || ""}</td>
+
+                <td>${shift.date || ""}</td>
+
+                <td>${shift.startTime || ""}</td>
+
+                <td>${shift.endTime || ""}</td>
+
+                <td>
+
+                    <button
+                        type="button"
+                        onclick="editShift(${shift.id})">
+                        Edit
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="deleteShift(${shift.id})">
+                        Delete
+                    </button>
+
+                </td>
+            `;
+
+
+            tableBody.appendChild(row);
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Shift loading error:",
+            error
+        );
+    }
+}
+
+
+/* ---------------------------------------------------------
+   SAVE SHIFT
+--------------------------------------------------------- */
 
 async function saveShift(event) {
 
     event.preventDefault();
 
+
     const id =
-        document
-            .getElementById("shiftId")
-            .value;
+        document.getElementById(
+            "shiftId"
+        ).value;
+
 
     const shiftName =
-        document
-            .getElementById("shiftName")
-            .value
-            .trim();
+        document.getElementById(
+            "shiftName"
+        ).value.trim();
+
 
     const date =
-        document
-            .getElementById("shiftDate")
-            .value;
+        document.getElementById(
+            "shiftDate"
+        ).value;
+
 
     const startTime =
-        document
-            .getElementById("startTime")
-            .value;
+        document.getElementById(
+            "startTime"
+        ).value;
+
 
     const endTime =
-        document
-            .getElementById("endTime")
-            .value;
+        document.getElementById(
+            "endTime"
+        ).value;
 
-    if (startTime >= endTime) {
+
+    if (
+        !shiftName ||
+        !date ||
+        !startTime ||
+        !endTime
+    ) {
+
+        alert(
+            "Please fill all shift details."
+        );
+
+        return;
+    }
+
+
+    /*
+       Night shift crosses midnight.
+       Example:
+       21:00 -> 01:00
+    */
+
+    if (
+        shiftName !== "Night" &&
+        startTime >= endTime
+    ) {
 
         alert(
             "End time must be later than start time."
@@ -846,6 +961,7 @@ async function saveShift(event) {
 
         return;
     }
+
 
     const shift = {
 
@@ -856,12 +972,13 @@ async function saveShift(event) {
         startTime: startTime,
 
         endTime: endTime
-
     };
+
 
     try {
 
         let response;
+
 
         if (id) {
 
@@ -900,25 +1017,30 @@ async function saveShift(event) {
                 );
         }
 
+
         if (!response.ok) {
 
             const message =
                 await response.text();
 
-            throw new Error(message);
+            throw new Error(
+                message ||
+                `Request failed with status ${response.status}`
+            );
         }
 
-        const savedShift =
-            await response.json();
-
-        console.log(
-            "Saved shift:",
-            savedShift
-        );
 
         closeShiftForm();
 
+
         await loadShifts();
+
+        await loadRoster();
+
+        await loadSwapRequests();
+
+        await loadDashboardCounts();
+
 
         alert(
             id
@@ -926,26 +1048,36 @@ async function saveShift(event) {
                 : "Shift added successfully!"
         );
 
+
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Save shift error:",
+            error
+        );
+
 
         alert(
             "Unable to save shift.\n\n" +
-            "Please check the Spring Boot server."
+            error.message
         );
     }
 }
 
 
-/* EDIT SHIFT */
+/* ---------------------------------------------------------
+   EDIT SHIFT
+--------------------------------------------------------- */
 
 async function editShift(id) {
 
     try {
 
         const response =
-            await fetch(`${API_URL}/shifts`);
+            await fetch(
+                `${API_URL}/shifts`
+            );
+
 
         if (!response.ok) {
 
@@ -954,81 +1086,124 @@ async function editShift(id) {
             );
         }
 
+
         const shifts =
             await response.json();
 
+
         const shift =
             shifts.find(
-                item => item.id == id
+                item =>
+                    Number(item.id) === Number(id)
             );
+
 
         if (!shift) {
 
-            alert("Shift not found.");
+            alert(
+                "Shift not found."
+            );
 
             return;
         }
 
-        document
-            .getElementById("shiftId")
-            .value = shift.id;
 
-        document
-            .getElementById("shiftName")
-            .value = shift.shiftName;
+        document.getElementById(
+            "shiftId"
+        ).value = shift.id;
 
-        document
-            .getElementById("shiftDate")
-            .value = shift.date;
 
-        document
-            .getElementById("startTime")
-            .value = shift.startTime;
+        let shiftName =
+            shift.shiftName || "";
 
-        document
-            .getElementById("endTime")
-            .value = shift.endTime;
 
-        document
-            .getElementById("shiftFormTitle")
-            .textContent = "Edit Shift";
+        /*
+           Support old database names.
+        */
 
-        document
-            .getElementById("shiftFormCard")
-            .classList.remove("hidden");
+        if (shiftName === "Morning Shift") {
+            shiftName = "Morning";
+        }
 
-        document
-            .getElementById("shiftFormCard")
-            .scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
+        if (shiftName === "Afternoon Shift") {
+            shiftName = "Afternoon";
+        }
+
+        if (shiftName === "Evening Shift") {
+            shiftName = "Evening";
+        }
+
+        if (shiftName === "Night Shift") {
+            shiftName = "Night";
+        }
+
+
+        document.getElementById(
+            "shiftName"
+        ).value = shiftName;
+
+
+        document.getElementById(
+            "shiftDate"
+        ).value = shift.date || "";
+
+
+        document.getElementById(
+            "startTime"
+        ).value =
+            shift.startTime
+                ? shift.startTime.substring(0, 5)
+                : "";
+
+
+        document.getElementById(
+            "endTime"
+        ).value =
+            shift.endTime
+                ? shift.endTime.substring(0, 5)
+                : "";
+
+
+        document.getElementById(
+            "shiftFormTitle"
+        ).textContent = "Edit Shift";
+
+
+        document.getElementById(
+            "shiftFormCard"
+        ).classList.remove("hidden");
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Edit shift error:",
+            error
+        );
+
 
         alert(
-            "Unable to load shift details."
+            "Unable to load shift.\n\n" +
+            error.message
         );
     }
 }
 
 
-/* DELETE SHIFT */
+/* ---------------------------------------------------------
+   DELETE SHIFT
+--------------------------------------------------------- */
 
 async function deleteShift(id) {
 
-    const confirmed =
-        confirm(
-            "Are you sure you want to delete Shift ID "
-            + id
-            + "?"
-        );
-
-    if (!confirmed) {
+    if (
+        !confirm(
+            "Are you sure you want to delete this shift?"
+        )
+    ) {
         return;
     }
+
 
     try {
 
@@ -1040,31 +1215,95 @@ async function deleteShift(id) {
                 }
             );
 
+
+        const message =
+            await response.text();
+
+
+        console.log(
+            "Delete shift:",
+            response.status,
+            message
+        );
+
+
         if (!response.ok) {
 
-            const message =
-                await response.text();
-
-            throw new Error(message);
+            throw new Error(
+                message ||
+                `Delete failed with status ${response.status}`
+            );
         }
+
+
+        await loadShifts();
+
+        await loadRoster();
+
+        await loadSwapRequests();
+
+        await loadDashboardCounts();
+
 
         alert(
             "Shift deleted successfully!"
         );
 
-        await loadShifts();
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Delete shift error:",
+            error
+        );
+
 
         alert(
             "Unable to delete shift.\n\n" +
-            "If this shift is already assigned " +
-            "to a roster or swap request, " +
-            "the database may prevent deletion."
+            error.message
         );
     }
+}
+
+
+/* ---------------------------------------------------------
+   FILTER SHIFTS
+--------------------------------------------------------- */
+
+function filterShifts() {
+
+    const searchInput =
+        document.getElementById(
+            "shiftSearch"
+        );
+
+
+    if (!searchInput) {
+        return;
+    }
+
+
+    const search =
+        searchInput.value.toLowerCase();
+
+
+    const rows =
+        document.querySelectorAll(
+            "#shiftTableBody tr"
+        );
+
+
+    rows.forEach(row => {
+
+        const text =
+            row.textContent.toLowerCase();
+
+
+        row.style.display =
+            text.includes(search)
+                ? ""
+                : "none";
+    });
 }
 
 
@@ -1073,355 +1312,300 @@ async function deleteShift(id) {
 ========================================================= */
 
 
-/* OPEN ROSTER FORM */
-
-function openRosterForm() {
-
-    document
-        .getElementById("rosterFormCard")
-        .classList.remove("hidden");
-
-    document
-        .getElementById("rosterForm")
-        .reset();
-
-    loadRosterEmployees();
-
-    loadRosterShifts();
-}
-
-
-/* CLOSE ROSTER FORM */
-
-function closeRosterForm() {
-
-    document
-        .getElementById("rosterFormCard")
-        .classList.add("hidden");
-
-    document
-        .getElementById("rosterForm")
-        .reset();
-}
-
-
-/* LOAD EMPLOYEES INTO ROSTER DROPDOWN */
-
-async function loadRosterEmployees() {
-
-    const employeeSelect =
-        document.getElementById("rosterEmployee");
-
-    if (!employeeSelect) return;
-
-    employeeSelect.innerHTML = `
-        <option value="">
-            Loading employees...
-        </option>
-    `;
-
-    try {
-
-        const response =
-            await fetch(`${API_URL}/employees`);
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Failed to load employees"
-            );
-        }
-
-        const employees =
-            await response.json();
-
-        employeeSelect.innerHTML = `
-            <option value="">
-                Select Employee
-            </option>
-        `;
-
-        employees.forEach(employee => {
-
-            employeeSelect.innerHTML += `
-                <option value="${employee.id}">
-                    ${employee.name} - ${employee.email}
-                </option>
-            `;
-
-        });
-
-    } catch (error) {
-
-        console.error(error);
-
-        employeeSelect.innerHTML = `
-            <option value="">
-                Unable to load employees
-            </option>
-        `;
-    }
-}
-
-
-/* LOAD SHIFTS INTO ROSTER DROPDOWN */
-
-async function loadRosterShifts() {
-
-    const shiftSelect =
-        document.getElementById("rosterShift");
-
-    if (!shiftSelect) return;
-
-    shiftSelect.innerHTML = `
-        <option value="">
-            Loading shifts...
-        </option>
-    `;
-
-    try {
-
-        const response =
-            await fetch(`${API_URL}/shifts`);
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Failed to load shifts"
-            );
-        }
-
-        const shifts =
-            await response.json();
-
-        shiftSelect.innerHTML = `
-            <option value="">
-                Select Shift
-            </option>
-        `;
-
-        shifts.forEach(shift => {
-
-            shiftSelect.innerHTML += `
-                <option value="${shift.id}">
-                    ${shift.shiftName}
-                    -
-                    ${shift.date}
-                    (${shift.startTime}
-                    -
-                    ${shift.endTime})
-                </option>
-            `;
-
-        });
-
-    } catch (error) {
-
-        console.error(error);
-
-        shiftSelect.innerHTML = `
-            <option value="">
-                Unable to load shifts
-            </option>
-        `;
-    }
-}
-
-
-/* LOAD ROSTER TABLE */
+/* ---------------------------------------------------------
+   LOAD ROSTER
+--------------------------------------------------------- */
 
 async function loadRoster() {
 
-    const tableBody =
-        document.getElementById("rosterTableBody");
-
-    if (!tableBody) return;
-
-    tableBody.innerHTML = `
-        <tr>
-
-            <td colspan="6"
-                class="empty-table">
-
-                Loading roster...
-
-            </td>
-
-        </tr>
-    `;
-
     try {
 
         const response =
-            await fetch(`${API_URL}/rosters`);
+            await fetch(
+                `${API_URL}/rosters`
+            );
+
 
         if (!response.ok) {
 
             throw new Error(
-                "Failed to load roster"
+                "Unable to load roster"
             );
         }
+
 
         const rosters =
             await response.json();
 
-        const rosterCount =
-            document.getElementById("rosterCount");
 
-        if (rosterCount) {
-            rosterCount.textContent =
-                rosters.length;
-        }
+        const tableBody =
+            document.getElementById(
+                "rosterTableBody"
+            );
 
-        if (rosters.length === 0) {
 
-            tableBody.innerHTML = `
-                <tr>
-
-                    <td colspan="6"
-                        class="empty-table">
-
-                        No roster assignments found.
-
-                        <br><br>
-
-                        Click
-                        <strong>+ Assign Shift</strong>
-                        to create one.
-
-                    </td>
-
-                </tr>
-            `;
-
+        if (!tableBody) {
             return;
         }
 
-        tableBody.innerHTML =
-            rosters.map(roster => {
 
-                const employee =
-                    roster.employee;
+        tableBody.innerHTML = "";
 
-                const shift =
-                    roster.shift;
 
-                const firstLetter =
-                    employee &&
-                    employee.name
-                        ? employee.name
-                            .charAt(0)
-                            .toUpperCase()
-                        : "?";
+        rosters.forEach(roster => {
 
-                return `
-                    <tr>
+            const row =
+                document.createElement("tr");
 
-                        <td>
-                            ${roster.id}
-                        </td>
 
-                        <td>
+            const employee =
+                roster.employee || null;
 
-                            <div class="employee-name">
 
-                                <div class="employee-avatar">
-                                    ${firstLetter}
-                                </div>
+            const shift =
+                roster.shift || null;
 
-                                ${employee.name}
 
-                            </div>
+            row.innerHTML = `
+                <td>${roster.id}</td>
 
-                        </td>
+                <td>
+                    ${employee
+                ? employee.name
+                : "N/A"}
+                </td>
 
-                        <td>
+                <td>
+                    ${shift
+                ? shift.shiftName
+                : "N/A"}
+                </td>
 
-                            <strong>
-                                ${shift.shiftName}
-                            </strong>
+                <td>
+                    ${shift
+                ? shift.date
+                : "N/A"}
+                </td>
 
-                        </td>
+                <td>
+                    ${shift
+                ? shift.startTime +
+                " - " +
+                shift.endTime
+                : "N/A"}
+                </td>
 
-                        <td>
-                            ${shift.date}
-                        </td>
+                <td>
 
-                        <td>
+                    <button
+                        type="button"
+                        onclick="deleteRoster(${roster.id})">
+                        Delete
+                    </button>
 
-                            ${shift.startTime}
-                            -
-                            ${shift.endTime}
+                </td>
+            `;
 
-                        </td>
 
-                        <td>
+            tableBody.appendChild(row);
+        });
 
-                            <div class="action-buttons">
-
-                                <button
-                                    class="delete-btn"
-                                    onclick="deleteRoster(${roster.id})"
-                                    title="Delete Assignment">
-
-                                    🗑
-
-                                </button>
-
-                            </div>
-
-                        </td>
-
-                    </tr>
-                `;
-
-            }).join("");
 
     } catch (error) {
 
-        console.error(error);
-
-        tableBody.innerHTML = `
-            <tr>
-
-                <td colspan="6"
-                    class="empty-table">
-
-                    ⚠ Unable to connect to
-                    Spring Boot backend.
-
-                </td>
-
-            </tr>
-        `;
+        console.error(
+            "Roster loading error:",
+            error
+        );
     }
 }
 
 
-/* CREATE ROSTER ASSIGNMENT */
+/* ---------------------------------------------------------
+   OPEN ROSTER FORM
+--------------------------------------------------------- */
+
+async function openRosterForm() {
+
+    const card =
+        document.getElementById(
+            "rosterFormCard"
+        );
+
+
+    if (card) {
+        card.classList.remove("hidden");
+    }
+
+
+    await loadRosterDropdowns();
+}
+
+
+/* ---------------------------------------------------------
+   CLOSE ROSTER FORM
+--------------------------------------------------------- */
+
+function closeRosterForm() {
+
+    const card =
+        document.getElementById(
+            "rosterFormCard"
+        );
+
+
+    if (card) {
+        card.classList.add("hidden");
+    }
+
+
+    const form =
+        document.getElementById(
+            "rosterForm"
+        );
+
+
+    if (form) {
+        form.reset();
+    }
+}
+
+
+/* ---------------------------------------------------------
+   ROSTER DROPDOWNS
+--------------------------------------------------------- */
+
+async function loadRosterDropdowns() {
+
+    try {
+
+        const [
+            employeeResponse,
+            shiftResponse
+        ] = await Promise.all([
+
+            fetch(`${API_URL}/employees`),
+
+            fetch(`${API_URL}/shifts`)
+        ]);
+
+
+        if (
+            !employeeResponse.ok ||
+            !shiftResponse.ok
+        ) {
+
+            throw new Error(
+                "Unable to load roster dropdowns"
+            );
+        }
+
+
+        const employees =
+            await employeeResponse.json();
+
+
+        const shifts =
+            await shiftResponse.json();
+
+
+        const employeeSelect =
+            document.getElementById(
+                "rosterEmployee"
+            );
+
+
+        const shiftSelect =
+            document.getElementById(
+                "rosterShift"
+            );
+
+
+        if (employeeSelect) {
+
+            employeeSelect.innerHTML = `
+                <option value="">
+                    Select Employee
+                </option>
+            `;
+
+
+            employees.forEach(employee => {
+
+                employeeSelect.innerHTML += `
+                    <option value="${employee.id}">
+                        ${employee.name}
+                    </option>
+                `;
+            });
+        }
+
+
+        if (shiftSelect) {
+
+            shiftSelect.innerHTML = `
+                <option value="">
+                    Select Shift
+                </option>
+            `;
+
+
+            shifts.forEach(shift => {
+
+                shiftSelect.innerHTML += `
+                    <option value="${shift.id}">
+                        ${shift.shiftName}
+                        -
+                        ${shift.date}
+                        (${shift.startTime}
+                        -
+                        ${shift.endTime})
+                    </option>
+                `;
+            });
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Roster dropdown error:",
+            error
+        );
+    }
+}
+
+
+/* ---------------------------------------------------------
+   SAVE ROSTER
+--------------------------------------------------------- */
 
 async function saveRoster(event) {
 
     event.preventDefault();
 
+
     const employeeId =
-        document
-            .getElementById("rosterEmployee")
-            .value;
+        document.getElementById(
+            "rosterEmployee"
+        ).value;
+
 
     const shiftId =
-        document
-            .getElementById("rosterShift")
-            .value;
+        document.getElementById(
+            "rosterShift"
+        ).value;
+
 
     if (!employeeId || !shiftId) {
 
         alert(
-            "Please select both an employee and a shift."
+            "Please select employee and shift."
         );
 
         return;
     }
+
 
     const roster = {
 
@@ -1432,8 +1616,8 @@ async function saveRoster(event) {
         shift: {
             id: Number(shiftId)
         }
-
     };
+
 
     try {
 
@@ -1453,67 +1637,62 @@ async function saveRoster(event) {
                 }
             );
 
+
         if (!response.ok) {
 
             const message =
                 await response.text();
 
-            throw new Error(message);
+            throw new Error(
+                message ||
+                `Request failed with status ${response.status}`
+            );
         }
 
-        const savedRoster =
-            await response.json();
-
-        console.log(
-            "Saved roster:",
-            savedRoster
-        );
 
         closeRosterForm();
 
+
         await loadRoster();
 
+        await loadDashboardCounts();
+
+
         alert(
-            "Shift assigned successfully!"
+            "Roster assigned successfully!"
         );
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Save roster error:",
+            error
+        );
 
-        if (
-            error.message &&
-            error.message !== "Failed to fetch"
-        ) {
 
-            alert(
-                "Unable to assign shift.\n\n" +
-                error.message
-            );
-
-        } else {
-
-            alert(
-                "Unable to assign shift.\n\n" +
-                "Please check the Spring Boot server."
-            );
-        }
+        alert(
+            "Unable to assign roster.\n\n" +
+            error.message
+        );
     }
 }
 
 
-/* DELETE ROSTER */
+/* ---------------------------------------------------------
+   DELETE ROSTER
+--------------------------------------------------------- */
 
 async function deleteRoster(id) {
 
-    const confirmed =
-        confirm(
-            "Are you sure you want to remove this shift assignment?"
-        );
-
-    if (!confirmed) {
+    if (
+        !confirm(
+            "Are you sure you want to delete this roster?"
+        )
+    ) {
         return;
     }
+
 
     try {
 
@@ -1525,26 +1704,41 @@ async function deleteRoster(id) {
                 }
             );
 
+
+        const message =
+            await response.text();
+
+
         if (!response.ok) {
 
-            const message =
-                await response.text();
-
-            throw new Error(message);
+            throw new Error(
+                message ||
+                `Delete failed with status ${response.status}`
+            );
         }
 
-        alert(
-            "Roster assignment deleted successfully!"
-        );
 
         await loadRoster();
 
-    } catch (error) {
+        await loadDashboardCounts();
 
-        console.error(error);
 
         alert(
-            "Unable to delete roster assignment."
+            "Roster deleted successfully!"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Delete roster error:",
+            error
+        );
+
+
+        alert(
+            "Unable to delete roster.\n\n" +
+            error.message
         );
     }
 }
@@ -1555,539 +1749,184 @@ async function deleteRoster(id) {
 ========================================================= */
 
 
-/* LOAD SWAP REQUESTS */
-
-async function loadSwapRequests() {
-
-    const container =
-        document.getElementById("swapList");
-
-    if (!container) return;
-
-    container.innerHTML = `
-        <div class="data-card">
-            <p>Loading swap requests...</p>
-        </div>
-    `;
-
-    try {
-
-        const response =
-            await fetch(`${API_URL}/swap-requests`);
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Unable to load swap requests"
-            );
-        }
-
-        const requests =
-            await response.json();
-
-        /*
-         * Store all requests globally.
-         * The filter will use this array.
-         */
-        allSwapRequests = requests;
-
-        const swapCount =
-            document.getElementById("swapCount");
-
-        if (swapCount) {
-            swapCount.textContent =
-                requests.length;
-        }
-
-        /*
-         * Reset filter to ALL whenever
-         * requests are freshly loaded.
-         */
-        const filter =
-            document.getElementById("swapStatusFilter");
-
-        if (filter) {
-            filter.value = "ALL";
-        }
-
-        renderSwapRequests(requests);
-
-    } catch (error) {
-
-        console.error(error);
-
-        container.innerHTML = `
-            <div class="data-card">
-
-                <h3>
-                    ⚠ Unable to Load Swap Requests
-                </h3>
-
-                <p>
-                    ${error.message}
-                </p>
-
-            </div>
-        `;
-    }
-}
-
-
-/* =========================================================
-   RENDER SWAP REQUESTS
-========================================================= */
-
-function renderSwapRequests(requests) {
-
-    const container =
-        document.getElementById("swapList");
-
-    if (!container) return;
-
-    if (requests.length === 0) {
-
-        container.innerHTML = `
-            <div class="data-card">
-
-                <h3>
-                    🔄 No Swap Requests
-                </h3>
-
-                <p>
-                    No requests match the selected filter.
-                </p>
-
-            </div>
-        `;
-
-        return;
-    }
-
-    container.innerHTML =
-        requests.map(request => {
-
-            const requester =
-                request.requester;
-
-            const colleague =
-                request.colleague;
-
-            const requesterShift =
-                request.requesterShift;
-
-            const colleagueShift =
-                request.colleagueShift;
-
-            return `
-                <div class="data-card">
-
-                    <h3>
-                        🔄 Swap Request #${request.id}
-                    </h3>
-
-                    <hr>
-
-                    <p>
-
-                        <strong>
-                            Requester:
-                        </strong>
-
-                        ${requester?.name || "N/A"}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Requester Email:
-                        </strong>
-
-                        ${requester?.email || "N/A"}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Current Shift:
-                        </strong>
-
-                        ${requesterShift?.shiftName || "N/A"}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Date:
-                        </strong>
-
-                        ${requesterShift?.date || "N/A"}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Time:
-                        </strong>
-
-                        ${requesterShift?.startTime || "N/A"}
-
-                        -
-
-                        ${requesterShift?.endTime || "N/A"}
-
-                    </p>
-
-                    <hr>
-
-                    <p>
-
-                        <strong>
-                            Colleague:
-                        </strong>
-
-                        ${colleague?.name || "N/A"}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Colleague Email:
-                        </strong>
-
-                        ${colleague?.email || "N/A"}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Requested Shift:
-                        </strong>
-
-                        ${colleagueShift?.shiftName || "N/A"}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Date:
-                        </strong>
-
-                        ${colleagueShift?.date || "N/A"}
-
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Time:
-                        </strong>
-
-                        ${colleagueShift?.startTime || "N/A"}
-
-                        -
-
-                        ${colleagueShift?.endTime || "N/A"}
-
-                    </p>
-
-                    <hr>
-
-                    <p>
-
-                        <strong>
-                            Status:
-                        </strong>
-
-                        <span class="status">
-                            ${request.status}
-                        </span>
-
-                    </p>
-
-                    ${
-                request.status === "PENDING_MANAGER"
-                    ?
-
-                    `
-                            <div class="action-buttons">
-
-                                <button
-                                    class="edit-btn"
-                                    onclick="approveSwapRequest(${request.id})">
-
-                                    ✓ Approve
-
-                                </button>
-
-                                <button
-                                    class="delete-btn"
-                                    onclick="rejectSwapRequest(${request.id})">
-
-                                    ✕ Reject
-
-                                </button>
-
-                            </div>
-                        `
-
-                    : ""
-            }
-
-                </div>
-            `;
-
-        }).join("");
-}
-
-
-/* =========================================================
-   FILTER SWAP REQUESTS
-========================================================= */
-
-function filterSwapRequests() {
-
-    const filter =
-        document.getElementById("swapStatusFilter");
-
-    if (!filter) return;
-
-    const selectedStatus =
-        filter.value;
-
-    /*
-     * If ALL is selected,
-     * show every request.
-     */
-    if (selectedStatus === "ALL") {
-
-        renderSwapRequests(
-            allSwapRequests
-        );
-
-        return;
-    }
-
-    /*
-     * Otherwise show only
-     * matching status.
-     */
-    const filteredRequests =
-        allSwapRequests.filter(
-            request =>
-                request.status === selectedStatus
-        );
-
-    renderSwapRequests(
-        filteredRequests
-    );
-}
-
-
-/* =========================================================
-   APPROVE SWAP REQUEST
-========================================================= */
-
-async function approveSwapRequest(id) {
-
-    const confirmed =
-        confirm(
-            "Approve this swap request?"
-        );
-
-    if (!confirmed) return;
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_URL}/swap-requests/${id}/approve`,
-                {
-                    method: "PUT"
-                }
-            );
-
-        if (!response.ok) {
-
-            const message =
-                await response.text();
-
-            throw new Error(message);
-        }
-
-        alert(
-            "Swap request approved successfully!"
-        );
-
-        await loadSwapRequests();
-
-        await loadRoster();
-
-        await loadDashboardCounts();
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Unable to approve swap request.\n\n"
-            + error.message
-        );
-    }
-}
-
-
-/* =========================================================
-   REJECT SWAP REQUEST
-========================================================= */
-
-async function rejectSwapRequest(id) {
-
-    const confirmed =
-        confirm(
-            "Decline this swap request?"
-        );
-
-    if (!confirmed) return;
-
-    try {
-
-        const response =
-            await fetch(
-                `${API_URL}/swap-requests/${id}/reject`,
-                {
-                    method: "PUT"
-                }
-            );
-
-        if (!response.ok) {
-
-            const message =
-                await response.text();
-
-            throw new Error(message);
-        }
-
-        alert(
-            "Swap request declined."
-        );
-
-        await loadSwapRequests();
-
-        await loadDashboardCounts();
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Unable to decline swap request.\n\n"
-            + error.message
-        );
-    }
-}
-
-
-/* =========================================================
-   SWAP REQUEST FORM
-========================================================= */
-
-
-/* OPEN SWAP FORM */
+/* ---------------------------------------------------------
+   OPEN SWAP FORM
+--------------------------------------------------------- */
 
 async function openSwapForm() {
 
-    document
-        .getElementById("swapFormCard")
-        .classList.remove("hidden");
+    const card =
+        document.getElementById(
+            "swapFormCard"
+        );
+
+
+    if (card) {
+        card.classList.remove("hidden");
+    }
+
+
+    const form =
+        document.getElementById(
+            "swapForm"
+        );
+
+
+    if (form) {
+        form.reset();
+    }
+
+
+    const requesterShift =
+        document.getElementById(
+            "requesterShift"
+        );
+
+
+    const colleagueShift =
+        document.getElementById(
+            "colleagueShift"
+        );
+
+
+    if (requesterShift) {
+
+        requesterShift.innerHTML = `
+            <option value="">
+                Select Requester Shift
+            </option>
+        `;
+    }
+
+
+    if (colleagueShift) {
+
+        colleagueShift.innerHTML = `
+            <option value="">
+                Select Colleague Shift
+            </option>
+        `;
+    }
+
 
     await loadSwapEmployees();
-
-    await loadSwapShifts();
 }
 
 
-/* CLOSE SWAP FORM */
+/* ---------------------------------------------------------
+   CLOSE SWAP FORM
+--------------------------------------------------------- */
 
 function closeSwapForm() {
 
-    document
-        .getElementById("swapFormCard")
-        .classList.add("hidden");
+    const card =
+        document.getElementById(
+            "swapFormCard"
+        );
 
-    document
-        .getElementById("swapForm")
-        .reset();
+
+    if (card) {
+        card.classList.add("hidden");
+    }
+
+
+    const form =
+        document.getElementById(
+            "swapForm"
+        );
+
+
+    if (form) {
+        form.reset();
+    }
 }
 
 
-/* LOAD EMPLOYEES FOR SWAP */
+/* ---------------------------------------------------------
+   LOAD SWAP EMPLOYEES
+--------------------------------------------------------- */
 
 async function loadSwapEmployees() {
 
     try {
 
         const response =
-            await fetch(`${API_URL}/employees`);
+            await fetch(
+                `${API_URL}/employees`
+            );
+
 
         if (!response.ok) {
+
             throw new Error(
                 "Unable to load employees"
             );
         }
 
+
         const employees =
             await response.json();
 
+
         const requester =
             document.getElementById(
-                "swapRequester"
+                "requester"
             );
+
 
         const colleague =
             document.getElementById(
-                "swapColleague"
+                "colleague"
             );
 
-        requester.innerHTML =
-            `
+
+        if (requester) {
+
+            requester.innerHTML = `
                 <option value="">
                     Select Requester
                 </option>
             `;
 
-        colleague.innerHTML =
-            `
+
+            employees.forEach(employee => {
+
+                requester.innerHTML += `
+                    <option value="${employee.id}">
+                        ${employee.name}
+                    </option>
+                `;
+            });
+        }
+
+
+        if (colleague) {
+
+            colleague.innerHTML = `
                 <option value="">
                     Select Colleague
                 </option>
             `;
 
-        employees.forEach(employee => {
 
-            requester.innerHTML += `
-                <option value="${employee.id}">
-                    ${employee.name}
-                </option>
-            `;
+            employees.forEach(employee => {
 
-            colleague.innerHTML += `
-                <option value="${employee.id}">
-                    ${employee.name}
-                </option>
-            `;
+                colleague.innerHTML += `
+                    <option value="${employee.id}">
+                        ${employee.name}
+                    </option>
+                `;
+            });
+        }
 
-        });
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Swap employee loading error:",
+            error
+        );
+
 
         alert(
             "Unable to load employees."
@@ -2096,119 +1935,289 @@ async function loadSwapEmployees() {
 }
 
 
-/* LOAD SHIFTS FOR SWAP */
+/* ---------------------------------------------------------
+   LOAD REQUESTER ROSTER SHIFTS
+--------------------------------------------------------- */
 
-async function loadSwapShifts() {
+async function loadRequesterRosterShifts() {
+
+    const employeeId =
+        document.getElementById(
+            "requester"
+        ).value;
+
+
+    const select =
+        document.getElementById(
+            "requesterShift"
+        );
+
+
+    if (!select) {
+        return;
+    }
+
+
+    select.innerHTML = `
+        <option value="">
+            Select Requester Shift
+        </option>
+    `;
+
+
+    if (!employeeId) {
+        return;
+    }
+
 
     try {
 
         const response =
-            await fetch(`${API_URL}/shifts`);
+            await fetch(
+                `${API_URL}/rosters`
+            );
+
 
         if (!response.ok) {
+
             throw new Error(
-                "Unable to load shifts"
+                "Unable to load roster"
             );
         }
 
-        const shifts =
+
+        const rosters =
             await response.json();
 
-        const requesterShift =
-            document.getElementById(
-                "swapRequesterShift"
-            );
 
-        const colleagueShift =
-            document.getElementById(
-                "swapColleagueShift"
-            );
+        const employeeRosters =
+            rosters.filter(roster => {
 
-        requesterShift.innerHTML =
-            `
-                <option value="">
-                    Select Requester Shift
-                </option>
-            `;
+                return roster.employee &&
+                    String(roster.employee.id) ===
+                    String(employeeId);
+            });
 
-        colleagueShift.innerHTML =
-            `
-                <option value="">
-                    Select Colleague Shift
-                </option>
-            `;
 
-        shifts.forEach(shift => {
+        employeeRosters.forEach(roster => {
 
-            const text =
-                `${shift.shiftName} - ${shift.date} ${shift.startTime}-${shift.endTime}`;
+            if (!roster.shift) {
+                return;
+            }
 
-            requesterShift.innerHTML += `
+
+            const shift =
+                roster.shift;
+
+
+            select.innerHTML += `
                 <option value="${shift.id}">
-                    ${text}
+                    ${shift.shiftName}
+                    |
+                    ${shift.date}
+                    |
+                    ${shift.startTime}
+                    -
+                    ${shift.endTime}
                 </option>
             `;
-
-            colleagueShift.innerHTML += `
-                <option value="${shift.id}">
-                    ${text}
-                </option>
-            `;
-
         });
+
+
+        if (employeeRosters.length === 0) {
+
+            select.innerHTML = `
+                <option value="">
+                    No roster shift found
+                </option>
+            `;
+        }
+
 
     } catch (error) {
 
-        console.error(error);
-
-        alert(
-            "Unable to load shifts."
+        console.error(
+            "Requester shift loading error:",
+            error
         );
+
+
+        select.innerHTML = `
+            <option value="">
+                Unable to load roster
+            </option>
+        `;
     }
 }
 
 
-/* SAVE SWAP REQUEST */
+/* ---------------------------------------------------------
+   LOAD COLLEAGUE ROSTER SHIFTS
+--------------------------------------------------------- */
+
+async function loadColleagueRosterShifts() {
+
+    const employeeId =
+        document.getElementById(
+            "colleague"
+        ).value;
+
+
+    const select =
+        document.getElementById(
+            "colleagueShift"
+        );
+
+
+    if (!select) {
+        return;
+    }
+
+
+    select.innerHTML = `
+        <option value="">
+            Select Colleague Shift
+        </option>
+    `;
+
+
+    if (!employeeId) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/rosters`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to load roster"
+            );
+        }
+
+
+        const rosters =
+            await response.json();
+
+
+        const employeeRosters =
+            rosters.filter(roster => {
+
+                return roster.employee &&
+                    String(roster.employee.id) ===
+                    String(employeeId);
+            });
+
+
+        employeeRosters.forEach(roster => {
+
+            if (!roster.shift) {
+                return;
+            }
+
+
+            const shift =
+                roster.shift;
+
+
+            select.innerHTML += `
+                <option value="${shift.id}">
+                    ${shift.shiftName}
+                    |
+                    ${shift.date}
+                    |
+                    ${shift.startTime}
+                    -
+                    ${shift.endTime}
+                </option>
+            `;
+        });
+
+
+        if (employeeRosters.length === 0) {
+
+            select.innerHTML = `
+                <option value="">
+                    No roster shift found
+                </option>
+            `;
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Colleague shift loading error:",
+            error
+        );
+
+
+        select.innerHTML = `
+            <option value="">
+                Unable to load roster
+            </option>
+        `;
+    }
+}
+
+
+/* ---------------------------------------------------------
+   SAVE SWAP REQUEST
+--------------------------------------------------------- */
 
 async function saveSwapRequest(event) {
 
     event.preventDefault();
 
-    const requesterId =
-        document
-            .getElementById("swapRequester")
-            .value;
 
-    const colleagueId =
-        document
-            .getElementById("swapColleague")
-            .value;
+    const requesterId =
+        document.getElementById(
+            "requester"
+        ).value;
+
 
     const requesterShiftId =
-        document
-            .getElementById("swapRequesterShift")
-            .value;
+        document.getElementById(
+            "requesterShift"
+        ).value;
+
+
+    const colleagueId =
+        document.getElementById(
+            "colleague"
+        ).value;
+
 
     const colleagueShiftId =
-        document
-            .getElementById("swapColleagueShift")
-            .value;
+        document.getElementById(
+            "colleagueShift"
+        ).value;
+
 
     if (
         !requesterId ||
-        !colleagueId ||
         !requesterShiftId ||
+        !colleagueId ||
         !colleagueShiftId
     ) {
 
         alert(
-            "Please select all employee and shift details."
+            "Please select requester, requester shift, colleague and colleague shift."
         );
 
         return;
     }
 
-    if (requesterId === colleagueId) {
+
+    if (
+        requesterId === colleagueId
+    ) {
 
         alert(
             "Requester and colleague must be different employees."
@@ -2216,6 +2225,19 @@ async function saveSwapRequest(event) {
 
         return;
     }
+
+
+    /*
+       IMPORTANT:
+       Backend SwapRequest entity expects:
+
+       requester
+       colleague
+       requesterShift
+       colleagueShift
+
+       Therefore send nested JSON.
+    */
 
     const swapRequest = {
 
@@ -2234,8 +2256,14 @@ async function saveSwapRequest(event) {
         colleagueShift: {
             id: Number(colleagueShiftId)
         }
-
     };
+
+
+    console.log(
+        "Sending swap request:",
+        swapRequest
+    );
+
 
     try {
 
@@ -2251,119 +2279,898 @@ async function saveSwapRequest(event) {
                     },
 
                     body:
-                        JSON.stringify(swapRequest)
+                        JSON.stringify(
+                            swapRequest
+                        )
                 }
             );
 
+
         if (!response.ok) {
 
-            const message =
+            const errorText =
                 await response.text();
 
-            throw new Error(message);
+
+            throw new Error(
+                errorText ||
+                `Request failed with status ${response.status}`
+            );
         }
 
-        alert(
-            "Swap request created successfully!"
+
+        const savedRequest =
+            await response.json();
+
+
+        console.log(
+            "Swap request created:",
+            savedRequest
         );
 
+
         closeSwapForm();
+
 
         await loadSwapRequests();
 
         await loadDashboardCounts();
 
-    } catch (error) {
-
-        console.error(error);
 
         alert(
-            "Unable to create swap request.\n\n"
-            + error.message
+            "Swap request created successfully!\n\n" +
+            "Status: Pending Manager Approval"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Save swap request error:",
+            error
+        );
+
+
+        alert(
+            "Unable to create swap request.\n\n" +
+            error.message
         );
     }
 }
 
 
-/* =========================================================
-   DASHBOARD COUNTS
-========================================================= */
+/* ---------------------------------------------------------
+   LOAD SWAP REQUESTS
+--------------------------------------------------------- */
 
-async function loadDashboardCounts() {
+async function loadSwapRequests() {
+
+    const container =
+        document.getElementById(
+            "swapList"
+        );
+
 
     try {
 
-        const employeesResponse =
-            await fetch(
-                `${API_URL}/employees`
-            );
-
-        const shiftsResponse =
-            await fetch(
-                `${API_URL}/shifts`
-            );
-
-        const rosterResponse =
-            await fetch(
-                `${API_URL}/rosters`
-            );
-
-        const swapsResponse =
+        const response =
             await fetch(
                 `${API_URL}/swap-requests`
             );
 
-        const employees =
-            await employeesResponse.json();
 
-        const shifts =
-            await shiftsResponse.json();
+        if (!response.ok) {
 
-        const rosters =
-            await rosterResponse.json();
+            throw new Error(
+                "Unable to load swap requests"
+            );
+        }
 
-        const swaps =
-            await swapsResponse.json();
 
-        document
-            .getElementById("employeeCount")
-            .textContent =
-            employees.length;
+        const requests =
+            await response.json();
 
-        document
-            .getElementById("shiftCount")
-            .textContent =
-            shifts.length;
 
-        document
-            .getElementById("rosterCount")
-            .textContent =
-            rosters.length;
+        console.log(
+            "Swap requests:",
+            requests
+        );
 
-        document
-            .getElementById("swapCount")
-            .textContent =
-            swaps.length;
+
+        allSwapRequests =
+            requests;
+
+
+        window.allSwapRequests =
+            requests;
+
+
+        /*
+           Update counts
+        */
+
+        const total =
+            requests.length;
+
+
+        const pending =
+            requests.filter(request =>
+                request.status ===
+                "PENDING_MANAGER"
+            ).length;
+
+
+        const approved =
+            requests.filter(request =>
+                request.status ===
+                "MANAGER_APPROVED"
+            ).length;
+
+
+        const rejected =
+            requests.filter(request =>
+                request.status ===
+                "MANAGER_REJECTED"
+            ).length;
+
+
+        const totalElement =
+            document.getElementById(
+                "totalSwapRequests"
+            );
+
+
+        const pendingElement =
+            document.getElementById(
+                "pendingSwapRequests"
+            );
+
+
+        const approvedElement =
+            document.getElementById(
+                "approvedSwapRequests"
+            );
+
+
+        const rejectedElement =
+            document.getElementById(
+                "rejectedSwapRequests"
+            );
+
+
+        if (totalElement) {
+            totalElement.textContent = total;
+        }
+
+
+        if (pendingElement) {
+            pendingElement.textContent = pending;
+        }
+
+
+        if (approvedElement) {
+            approvedElement.textContent = approved;
+        }
+
+
+        if (rejectedElement) {
+            rejectedElement.textContent = rejected;
+        }
+
+
+        const oldSwapCount =
+            document.getElementById(
+                "swapCount"
+            );
+
+
+        if (oldSwapCount) {
+            oldSwapCount.textContent = pending;
+        }
+
+
+        /*
+           Display
+        */
+
+        if (container) {
+
+            if (requests.length === 0) {
+
+                container.innerHTML = `
+                    <div class="data-card">
+
+                        <h3>No Swap Requests</h3>
+
+                        <p>
+                            No employee swap requests
+                            have been created yet.
+                        </p>
+
+                    </div>
+                `;
+
+            } else {
+
+                renderSwapRequests(
+                    requests
+                );
+            }
+        }
+
 
     } catch (error) {
 
-        console.log(
-            "Backend is not available."
+        console.error(
+            "Swap request loading error:",
+            error
+        );
+
+
+        if (container) {
+
+            container.innerHTML = `
+                <div class="data-card">
+
+                    <h3>
+                        ⚠ Unable to Load Swap Requests
+                    </h3>
+
+                    <p>
+                        ${error.message}
+                    </p>
+
+                </div>
+            `;
+        }
+    }
+}
+
+
+/* ---------------------------------------------------------
+   RENDER SWAP REQUESTS
+--------------------------------------------------------- */
+
+function renderSwapRequests(requests) {
+
+    const container =
+        document.getElementById(
+            "swapList"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    if (
+        !requests ||
+        requests.length === 0
+    ) {
+
+        container.innerHTML = `
+            <div class="data-card">
+
+                <h3>
+                    No Matching Requests
+                </h3>
+
+                <p>
+                    No swap requests match your filter.
+                </p>
+
+            </div>
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML =
+        requests.map(request => {
+
+            const requester =
+                request.requester || {};
+
+
+            const colleague =
+                request.colleague || {};
+
+
+            const requesterShift =
+                request.requesterShift || {};
+
+
+            const colleagueShift =
+                request.colleagueShift || {};
+
+
+            const status =
+                request.status ||
+                "PENDING_MANAGER";
+
+
+            let statusText =
+                "Pending Manager";
+
+
+            let statusClass =
+                "pending";
+
+
+            if (
+                status ===
+                "MANAGER_APPROVED"
+            ) {
+
+                statusText =
+                    "Manager Approved";
+
+                statusClass =
+                    "approved";
+            }
+
+
+            if (
+                status ===
+                "MANAGER_REJECTED"
+            ) {
+
+                statusText =
+                    "Manager Rejected";
+
+                statusClass =
+                    "rejected";
+            }
+
+
+            const requesterShiftName =
+                requesterShift.shiftName ||
+                "N/A";
+
+
+            const colleagueShiftName =
+                colleagueShift.shiftName ||
+                "N/A";
+
+
+            const requesterDate =
+                requesterShift.date ||
+                "N/A";
+
+
+            const colleagueDate =
+                colleagueShift.date ||
+                "N/A";
+
+
+            const requesterStart =
+                requesterShift.startTime ||
+                "N/A";
+
+
+            const requesterEnd =
+                requesterShift.endTime ||
+                "N/A";
+
+
+            const colleagueStart =
+                colleagueShift.startTime ||
+                "N/A";
+
+
+            const colleagueEnd =
+                colleagueShift.endTime ||
+                "N/A";
+
+
+            return `
+
+                <div class="data-card swap-request-card">
+
+                    <!-- HEADER -->
+
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        gap:15px;
+                        flex-wrap:wrap;
+                    ">
+
+                        <div>
+
+                            <h3>
+                                🔄 Swap Request #${request.id}
+                            </h3>
+
+                            <small>
+                                Employee shift exchange request
+                            </small>
+
+                        </div>
+
+
+                        <span class="status ${statusClass}">
+                            ${statusText}
+                        </span>
+
+                    </div>
+
+
+                    <hr>
+
+
+                    <!-- EMPLOYEE DETAILS -->
+
+                    <div style="
+                        display:grid;
+                        grid-template-columns:
+                            repeat(auto-fit,minmax(250px,1fr));
+                        gap:20px;
+                    ">
+
+
+                        <!-- REQUESTER -->
+
+                        <div style="
+                            padding:15px;
+                            border:1px solid #ddd;
+                            border-radius:8px;
+                        ">
+
+                            <h4>
+                                👤 Requester
+                            </h4>
+
+
+                            <p>
+                                <strong>Name:</strong>
+                                ${requester.name || "N/A"}
+                            </p>
+
+
+                            <p>
+                                <strong>Email:</strong>
+                                ${requester.email || "N/A"}
+                            </p>
+
+
+                            <p>
+                                <strong>Shift:</strong>
+                                ${requesterShiftName}
+                            </p>
+
+
+                            <p>
+                                <strong>Date:</strong>
+                                ${requesterDate}
+                            </p>
+
+
+                            <p>
+                                <strong>Time:</strong>
+                                ${requesterStart}
+                                -
+                                ${requesterEnd}
+                            </p>
+
+                        </div>
+
+
+                        <!-- COLLEAGUE -->
+
+                        <div style="
+                            padding:15px;
+                            border:1px solid #ddd;
+                            border-radius:8px;
+                        ">
+
+                            <h4>
+                                👤 Colleague
+                            </h4>
+
+
+                            <p>
+                                <strong>Name:</strong>
+                                ${colleague.name || "N/A"}
+                            </p>
+
+
+                            <p>
+                                <strong>Email:</strong>
+                                ${colleague.email || "N/A"}
+                            </p>
+
+
+                            <p>
+                                <strong>Shift:</strong>
+                                ${colleagueShiftName}
+                            </p>
+
+
+                            <p>
+                                <strong>Date:</strong>
+                                ${colleagueDate}
+                            </p>
+
+
+                            <p>
+                                <strong>Time:</strong>
+                                ${colleagueStart}
+                                -
+                                ${colleagueEnd}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- MANAGER ACTIONS -->
+
+                    ${
+                status === "PENDING_MANAGER"
+
+                    ?
+
+                    `
+                        <div style="
+                            margin-top:20px;
+                            display:flex;
+                            gap:10px;
+                            flex-wrap:wrap;
+                        ">
+
+                            <button
+                                type="button"
+                                class="primary-btn"
+                                onclick="approveSwapRequest(${request.id})">
+
+                                ✓ Approve
+
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="delete-btn"
+                                onclick="rejectSwapRequest(${request.id})">
+
+                                ✕ Reject
+
+                            </button>
+
+                        </div>
+                        `
+
+                    :
+
+                    `
+                        <div style="
+                            margin-top:20px;
+                            padding:12px;
+                            border-radius:6px;
+                        ">
+
+                            ${
+                        status ===
+                        "MANAGER_APPROVED"
+
+                            ?
+
+                            "✓ This request has been approved by the manager."
+
+                            :
+
+                            "✕ This request has been rejected by the manager."
+                    }
+
+                        </div>
+                        `
+            }
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+
+/* ---------------------------------------------------------
+   FILTER SWAP REQUESTS
+--------------------------------------------------------- */
+
+function filterSwapRequests() {
+
+    const searchInput =
+        document.getElementById(
+            "swapSearch"
+        );
+
+
+    const statusInput =
+        document.getElementById(
+            "swapStatusFilter"
+        );
+
+
+    const search =
+        searchInput
+            ? searchInput.value
+                .toLowerCase()
+                .trim()
+            : "";
+
+
+    const selectedStatus =
+        statusInput
+            ? statusInput.value
+            : "ALL";
+
+
+    const requests =
+        window.allSwapRequests ||
+        allSwapRequests ||
+        [];
+
+
+    const filtered =
+        requests.filter(request => {
+
+            const requester =
+                request.requester || {};
+
+
+            const colleague =
+                request.colleague || {};
+
+
+            const requesterShift =
+                request.requesterShift || {};
+
+
+            const colleagueShift =
+                request.colleagueShift || {};
+
+
+            const searchableText = `
+
+                ${request.id || ""}
+
+                ${requester.name || ""}
+
+                ${requester.email || ""}
+
+                ${colleague.name || ""}
+
+                ${colleague.email || ""}
+
+                ${requesterShift.shiftName || ""}
+
+                ${colleagueShift.shiftName || ""}
+
+                ${requesterShift.date || ""}
+
+                ${colleagueShift.date || ""}
+
+                ${requesterShift.startTime || ""}
+
+                ${requesterShift.endTime || ""}
+
+                ${colleagueShift.startTime || ""}
+
+                ${colleagueShift.endTime || ""}
+
+                ${request.status || ""}
+
+            `.toLowerCase();
+
+
+            const matchesSearch =
+                searchableText.includes(
+                    search
+                );
+
+
+            const matchesStatus =
+                selectedStatus === "ALL" ||
+                request.status ===
+                selectedStatus;
+
+
+            return (
+                matchesSearch &&
+                matchesStatus
+            );
+        });
+
+
+    renderSwapRequests(
+        filtered
+    );
+}
+
+
+/* ---------------------------------------------------------
+   APPROVE SWAP REQUEST
+--------------------------------------------------------- */
+
+async function approveSwapRequest(id) {
+
+    const confirmed =
+        confirm(
+            "Approve Swap Request #" +
+            id +
+            "?"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/swap-requests/${id}/approve`,
+                {
+                    method: "PUT"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            const errorText =
+                await response.text();
+
+
+            throw new Error(
+                errorText ||
+                `Approval failed with status ${response.status}`
+            );
+        }
+
+
+        await response.json();
+
+
+        alert(
+            "Swap request approved successfully."
+        );
+
+
+        await loadSwapRequests();
+
+        await loadRoster();
+
+        await loadDashboardCounts();
+
+
+    } catch (error) {
+
+        console.error(
+            "Approve error:",
+            error
+        );
+
+
+        alert(
+            "Unable to approve request.\n\n" +
+            error.message
+        );
+    }
+}
+
+
+/* ---------------------------------------------------------
+   REJECT SWAP REQUEST
+--------------------------------------------------------- */
+
+async function rejectSwapRequest(id) {
+
+    const confirmed =
+        confirm(
+            "Reject Swap Request #" +
+            id +
+            "?"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/swap-requests/${id}/reject`,
+                {
+                    method: "PUT"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            const errorText =
+                await response.text();
+
+
+            throw new Error(
+                errorText ||
+                `Reject failed with status ${response.status}`
+            );
+        }
+
+
+        await response.json();
+
+
+        alert(
+            "Swap request rejected."
+        );
+
+
+        await loadSwapRequests();
+
+        await loadDashboardCounts();
+
+
+    } catch (error) {
+
+        console.error(
+            "Reject error:",
+            error
+        );
+
+
+        alert(
+            "Unable to reject request.\n\n" +
+            error.message
         );
     }
 }
 
 
 /* =========================================================
-   START APPLICATION
+   INITIAL LOAD
 ========================================================= */
 
-loadDashboardCounts();
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-loadEmployees();
+        loadDashboardCounts();
 
-loadShifts();
+        loadEmployees();
 
-loadRoster();
+        loadShifts();
 
-loadSwapRequests();
+        loadRoster();
+
+        loadSwapRequests();
+    }
+);
+
+
+/* =========================================================
+   WINDOW LOAD
+========================================================= */
+
+window.addEventListener(
+    "load",
+    function () {
+
+        loadDashboardCounts();
+
+        loadSwapRequests();
+    }
+);
+

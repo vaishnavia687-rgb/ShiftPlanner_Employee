@@ -1,4 +1,4 @@
-package com.example.shiftplanner.controller;
+ package com.example.shiftplanner.controller;
 
 import com.example.shiftplanner.entity.Employee;
 import com.example.shiftplanner.service.EmployeeService;
@@ -20,7 +20,7 @@ public class EmployeeController {
     // CREATE
     @PostMapping
     public Employee addEmployee(@RequestBody Employee employee) {
-        return employeeService.addEmployee(employee);
+        return employeeService.createEmployee(employee);
     }
 
     // READ
@@ -47,3 +47,4 @@ public class EmployeeController {
         return "Employee deleted successfully";
     }
 }
+

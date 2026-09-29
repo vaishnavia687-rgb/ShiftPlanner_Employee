@@ -48,6 +48,7 @@ public class SwapRequestService {
                                 )
                         );
 
+        // CHECK STATUS
         if (swapRequest.getStatus()
                 != SwapStatus.PENDING_MANAGER) {
 
@@ -58,6 +59,7 @@ public class SwapRequestService {
 
         // CHECK REQUESTER SHIFT
         if (swapRequest.getRequesterShift() == null) {
+
             throw new RuntimeException(
                     "Requester shift is missing in this swap request"
             );
@@ -65,26 +67,47 @@ public class SwapRequestService {
 
         // CHECK COLLEAGUE SHIFT
         if (swapRequest.getColleagueShift() == null) {
+
             throw new RuntimeException(
                     "Colleague shift is missing in this swap request"
             );
         }
 
+        // CHECK REQUESTER
+        if (swapRequest.getRequester() == null) {
+
+            throw new RuntimeException(
+                    "Requester is missing in this swap request"
+            );
+        }
+
+        // CHECK COLLEAGUE
+        if (swapRequest.getColleague() == null) {
+
+            throw new RuntimeException(
+                    "Colleague is missing in this swap request"
+            );
+        }
+
+        // FIND REQUESTER ROSTER
         Roster requesterRoster =
                 rosterRepository.findAll()
                         .stream()
                         .filter(roster ->
-                                roster.getEmployee().getId()
+                                roster.getEmployee() != null
+                                        && roster.getShift() != null
+                                        && roster.getEmployee().getId()
                                         .equals(
-                                                swapRequest.getRequester().getId()
+                                                swapRequest
+                                                        .getRequester()
+                                                        .getId()
                                         )
-                                        &&
-                                        roster.getShift().getId()
-                                                .equals(
-                                                        swapRequest
-                                                                .getRequesterShift()
-                                                                .getId()
-                                                )
+                                        && roster.getShift().getId()
+                                        .equals(
+                                                swapRequest
+                                                        .getRequesterShift()
+                                                        .getId()
+                                        )
                         )
                         .findFirst()
                         .orElseThrow(() ->
@@ -93,21 +116,25 @@ public class SwapRequestService {
                                 )
                         );
 
+        // FIND COLLEAGUE ROSTER
         Roster colleagueRoster =
                 rosterRepository.findAll()
                         .stream()
                         .filter(roster ->
-                                roster.getEmployee().getId()
+                                roster.getEmployee() != null
+                                        && roster.getShift() != null
+                                        && roster.getEmployee().getId()
                                         .equals(
-                                                swapRequest.getColleague().getId()
+                                                swapRequest
+                                                        .getColleague()
+                                                        .getId()
                                         )
-                                        &&
-                                        roster.getShift().getId()
-                                                .equals(
-                                                        swapRequest
-                                                                .getColleagueShift()
-                                                                .getId()
-                                                )
+                                        && roster.getShift().getId()
+                                        .equals(
+                                                swapRequest
+                                                        .getColleagueShift()
+                                                        .getId()
+                                        )
                         )
                         .findFirst()
                         .orElseThrow(() ->
@@ -125,6 +152,7 @@ public class SwapRequestService {
                 swapRequest.getRequester()
         );
 
+        // SAVE ROSTERS
         rosterRepository.save(requesterRoster);
         rosterRepository.save(colleagueRoster);
 
@@ -137,7 +165,6 @@ public class SwapRequestService {
                 swapRequest
         );
     }
-
 
     // MANAGER DECLINE
     public SwapRequest managerReject(Long id) {

@@ -1116,4 +1116,40 @@ tbody tr:last-child td {
     .form-grid {
         grid-template-columns: 1fr;
     }
+
+
+}
+
+/* FIX ALL DROPDOWNS */
+
+select {
+    display: block !important;
+    width: 100% !important;
+    min-height: 45px !important;
+
+    padding: 10px 40px 10px 12px !important;
+
+    border: 1px solid #ccc !important;
+    border-radius: 6px !important;
+
+    background-color: white !important;
+    color: #222 !important;
+
+    font-size: 15px !important;
+    cursor: pointer !important;
+
+    appearance: auto !important;
+    -webkit-appearance: auto !important;
+    -moz-appearance: auto !important;
+
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Make dropdown options visible */
+
+select option {
+    background-color: white !important;
+    color: #222 !important;
+    padding: 10px !important;
 }
